@@ -1,11 +1,18 @@
 import IO from "IO"
 
-import { Regex } from "./Regex"
-import Stemmer from "./Stemmer"
+import { Regex, UnflaggedRegex } from "./Regex"
+import { stemmer } from "./Stemmer"
 
 
 
 main = () => {
   IO.putLine("Hello World!")
-  IO.trace("reggie watts", Regex("[^aeiou]", ""))
+  pipe(
+    UnflaggedRegex,
+    IO.trace("reggie watts"),
+  )("[^aeiou]")
+  pipe(
+    stemmer,
+    IO.trace("stemstimstomstam"),
+  )("issues")
 }

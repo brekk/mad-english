@@ -155,6 +155,25 @@ stepOneB = (result) => ifElse(
   ),
 )(result)
 
+stepOneC :: String -> String
+stepOneC = when(
+  (r) => pipe(
+    matchesSuffix(SUFFIX_Y),
+    (c) => c && check(VOWEL_IN_STEM, r),
+  )(r),
+  (raw) => pipe(
+    String.charAt(1),
+    where {
+      Just(c) =>
+        String.singleton(c) ++ "i"
+
+      Nothing =>
+        raw
+    },
+  )(raw),
+)
+
+
 stemmer :: String -> String
 export stemmer = pipe(
   String.toLower,
@@ -166,6 +185,11 @@ export stemmer = pipe(
       stepOneA,
       // step 1b
       stepOneB,
+      // step 1c
+      stepOneC,
+      // step 2
+      // stepTwo,
+
     )(raw),
   ),
 )
