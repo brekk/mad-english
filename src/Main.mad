@@ -1,0 +1,11 @@
+import IO from "IO"
+
+import { Regex } from "./Regex"
+import Stimmer from "./Stimmer"
+
+
+
+main = () => {
+  IO.putLine("Hello World!")
+  IO.trace("reggie watts", Regex("[^aeiou]", ""))
+}

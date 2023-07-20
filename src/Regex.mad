@@ -1,0 +1,51 @@
+export type Regex = Regex(String, String) | InvalidRegex
+
+
+__rg = (pattern, flags) => #- new RegExp(pattern, flags) -#
+
+match :: Regex -> String -> Boolean
+export match = (rg, input) => where(rg) {
+  Regex(pattern, flags) =>
+    pipe(
+      __rg(pattern),
+      (r) => #- input.match(r) !== null -#,
+    )(flags)
+
+  InvalidRegex =>
+    false
+}
+
+check :: Regex -> String -> Boolean
+export check = (rg, input) => where(rg) {
+  Regex(pattern, flags) =>
+    pipe(
+      __rg(pattern),
+      (r) => #- input.test(r) !== null -#,
+    )(flags)
+
+  InvalidRegex =>
+    false
+}
+replace :: Regex -> String -> String -> String
+export replace = (rg, replacement, input) => where(rg) {
+  Regex(pattern, flags) =>
+    pipe(
+      __rg(pattern),
+      (r) => #- input.replace(r, replacement) -#,
+    )(flags)
+
+  InvalidRegex =>
+    input
+}
+
+search :: Regex -> String -> List String
+export search = (rg, input) => where(rg) {
+  Regex(pattern, flags) =>
+    pipe(
+      __rg(pattern),
+      (r) => #- r.exec(input) -#,
+    )(flags)
+
+  InvalidRegex =>
+    []
+}

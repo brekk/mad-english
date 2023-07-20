@@ -1,0 +1,146 @@
+import Dict from "Dictionary"
+import Fn from "Function"
+import List from "List"
+import { Just, Nothing } from "Maybe"
+import String from "String"
+
+import { Regex, check, match, replace, search } from "./Regex"
+
+
+
+I = Fn.identity
+ifElse = Fn.iFElse
+
+PASS_2_MAP = Dict.fromList([
+  #["ational", "ate"],
+  #["tional", "tion"],
+  #["enci", "ence"],
+  #["anci", "ance"],
+  #["izer", "ize"],
+  #["bli", "ble"],
+  #["alli", "al"],
+  #["entli", "ent"],
+  #["eli", "e"],
+  #["ousli", "ous"],
+  #["ization", "ize"],
+  #["ation", "ate"],
+  #["ator", "ate"],
+  #["alism", "al"],
+  #["iveness", "ive"],
+  #["fulness", "ful"],
+  #["ousness", "ous"],
+  #["aliti", "al"],
+  #["iviti", "ive"],
+  #["biliti", "ble"],
+  #["logi", "log"],
+])
+
+PASS_3_MAP = Dict.fromList([
+  #["icate", "ic"],
+  #["ative", ""],
+  #["alize", "al"],
+  #["iciti", "ic"],
+  #["ical", "ic"],
+  #["ful", ""],
+  #["ness", ""],
+])
+
+CONSONANT = "[^aeiou]"
+VOWEL = "[aeiouy]"
+CONSONANTS = "(" ++ CONSONANT ++ "[^aeiouy]*)"
+VOWELS = "(" ++ VOWEL ++ "[aeiou]*)"
+
+LOGIC_GT0 = Regex("^" ++ CONSONANTS ++ "?" ++ VOWELS ++ CONSONANTS)
+LOGIC_EQ1 = Regex("^" ++ CONSONANTS ++ "?" ++ VOWELS ++ CONSONANTS ++ VOWELS ++ "?$")
+LOGIC_GT1 = Regex("^" ++ CONSONANTS ++ "?(" ++ VOWELS ++ CONSONANTS ++ "){2,}")
+VOWEL_IN_STEM = Regex("^" ++ CONSONANTS ++ "?" ++ VOWEL)
+CONSONANT_LIKE = Regex("^" ++ CONSONANTS ++ VOWEL ++ "[^aeiouwxy]$")
+
+SUFFIX_LL = Regex("ll$", "")
+SUFFIX_E = Regex("^(.+?)e$", "")
+SUFFIX_Y = Regex("^(.+?)y$", "")
+SUFFIX_ION = Regex("^(.+?(s|t))(ion)$", "")
+SUFFIX_ED_OR_ING = Regex("^(.+?)(ed|ing)$", "")
+SUFFIX_AT_OR_BL_OR_IZ = Regex("(at|bl|iz)$", "")
+SUFFIX_EED = Regex("^(.+?)eed$", "")
+SUFFIX_S = Regex("^.+?[^s]s$", "")
+SUFFIX_SSES_IES = Regex("^.+?(ss|i)es$", "")
+SUFFIX_CONSONANT_LIKE = Regex("([^aeiouylsz])\1$", "")
+PASS_2 = Regex(
+  "^(.+?)(ational|tional|enci|anci|izer|bli|alli|entli|eli|ousli|ization|ation|ator|alism|iveness|fulness|ousness|aliti|iviti|biliti|logi)$",
+  "",
+)
+PASS_3 = Regex("^(.+?)(icate|ative|alize|iciti|ical|ful|ness)$", "")
+PASS_4 = Regex(
+  "^(.+?)(al|ance|ence|er|ic|able|ible|ant|ement|ment|ent|ou|ism|ate|iti|ous|ive|ize)$",
+  "",
+)
+
+unless = Fn.ifElse($, I)
+
+prepend :: String -> String -> String
+prepend = (before, x) => before ++ x
+append = (after, x) => prepend(x, after)
+
+sliceToEnd :: Integer -> String -> String
+export sliceToEnd = (x, str) => pipe(
+  // String.toList,
+  String.slice(x, String.length(str)),
+  // String.fromList,
+
+
+
+
+
+
+
+
+
+
+
+
+
+)(str)
+
+stemmer :: String -> String
+export stemmer = pipe(
+  String.toLower,
+  unless(
+    (x) => String.length(x) < 3,
+    (raw) => pipe(
+      // deal with leading 'y'
+      Fn.when(
+        pipe(
+          String.firstChar,
+          where {
+            Just(c0) =>
+              Fn.equals('y', c0)
+
+            Nothing =>
+              false
+          },
+        ),
+        pipe(
+          sliceToEnd(1),
+          prepend("Y"),
+        ),
+      ),
+      // step 1a
+      ifElse(check(SUFFIX_SSES_OR_IES), String.slice(0, -2), String.slice(0, -1)),
+      // step 1b
+      (result) => ifElse(
+        search(SUFFIX_EED),
+        pipe(
+          nth(1),
+          where {
+            Just(c1) =>
+              ifElse(check(LOGIC_GT0), K(String.slice(0, -1, result)), K(result))(c1)
+
+            Nothing =>
+              result
+          },
+        ),
+      )(result),
+    )(raw),
+  ),
+)
