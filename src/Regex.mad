@@ -1,50 +1,65 @@
 export type Regex = Regex(String, String) | InvalidRegex
 
+UnflaggedRegex :: String -> Regex
+export UnflaggedRegex = (x) => Regex(x, "")
 
 __rg = (pattern, flags) => #- new RegExp(pattern, flags) -#
+
+__match :: String -> String -> Boolean
+__match = (pattern, flags) => pipe(
+  __rg(pattern),
+  (r) => #- input.match(r) !== null -#,
+)(flags)
 
 match :: Regex -> String -> Boolean
 export match = (rg, input) => where(rg) {
   Regex(pattern, flags) =>
-    pipe(
-      __rg(pattern),
-      (r) => #- input.match(r) !== null -#,
-    )(flags)
+    __match(pattern, flags)
 
   InvalidRegex =>
     false
 }
+
+__check :: String -> String -> Boolean
+__check = (pattern, flags) => pipe(
+  __rg(pattern),
+  (r) => #- input.test(r) !== null -#,
+)(flags)
 
 check :: Regex -> String -> Boolean
 export check = (rg, input) => where(rg) {
   Regex(pattern, flags) =>
-    pipe(
-      __rg(pattern),
-      (r) => #- input.test(r) !== null -#,
-    )(flags)
+    __check(pattern, flags)
 
   InvalidRegex =>
     false
 }
+
+__replace :: String -> String -> String -> String
+__replace = (pattern, flags, replacement) => pipe(
+  __rg(pattern),
+  (r) => #- input.replace(r, replacement) -#,
+)(flags)
+
 replace :: Regex -> String -> String -> String
 export replace = (rg, replacement, input) => where(rg) {
   Regex(pattern, flags) =>
-    pipe(
-      __rg(pattern),
-      (r) => #- input.replace(r, replacement) -#,
-    )(flags)
+    __replace(pattern, flags, replacement)
 
   InvalidRegex =>
     input
 }
 
+__search :: String -> String -> String -> List String
+__search = (pattern, flags, input) => pipe(
+  __rg(pattern),
+  (r) => #- r.exec(input) -#,
+)(input)
+
 search :: Regex -> String -> List String
 export search = (rg, input) => where(rg) {
   Regex(pattern, flags) =>
-    pipe(
-      __rg(pattern),
-      (r) => #- r.exec(input) -#,
-    )(flags)
+    __search(pattern, flags, input)
 
   InvalidRegex =>
     []
