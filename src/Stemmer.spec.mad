@@ -1,13 +1,16 @@
 import { assertEquals, test } from "Test"
 
+import { InvalidRegex, Regex } from "./Regex"
 import {
   SUFFIX_EED,
+  SUFFIX_LL,
   append,
   dealWithLeadingY,
   matchesSuffix,
   prepend,
   sliceToEnd,
   stepOneA,
+  stepOneB,
 } from "./Stemmer"
 
 
@@ -21,5 +24,37 @@ test("dealWithLeadingY - no match", () => assertEquals("?", dealWithLeadingY("?"
 test("dealWithLeadingY - nothing match", () => assertEquals("", dealWithLeadingY("")))
 
 test("stepOneA", () => assertEquals("issue", stepOneA("issues")))
-
-test("matchesSuffix", () => assertEquals(true, matchesSuffix(SUFFIX_EED, "indeed")))
+test(
+  "matchesSuffix",
+  () => assertEquals([true, false], map(matchesSuffix(SUFFIX_EED))(["indeed", "quest"])),
+)
+test("matchesSuffix - no", () => assertEquals(false, matchesSuffix(InvalidRegex, "quest")))
+test(
+  "matchesSuffix - unmatched",
+  () => assertEquals(
+    false,
+    matchesSuffix(
+      Regex("/quick\s(?<color>brown).+?(jumps)", "dgi"),
+      "The Quick Brown Fox Jumps Over The Lazy Dog",
+    ),
+  ),
+)
+test(
+  "stepOneB",
+  () => assertEquals(
+    ["e", "need", "reed", "seed", "peed", "cede", "lede", "", "indeed", "concede", "intercede"],
+    map(stepOneB)([
+      "needing",
+      "need",
+      "reed",
+      "seed",
+      "peed",
+      "cede",
+      "led",
+      "",
+      "indeed",
+      "concede",
+      "intercede",
+    ]),
+  ),
+)

@@ -5,7 +5,7 @@ import Dict from "Dictionary"
 import Fn from "Function"
 import IO from "IO"
 import List from "List"
-import { Just, Nothing } from "Maybe"
+import { Just, Nothing, fromMaybe } from "Maybe"
 import {} from "Number"
 import String from "String"
 
@@ -116,58 +116,69 @@ export stepOneA = Fn.ifElse(check(SUFFIX_SSES_IES), String.slice(0, -2), String.
 matchesSuffix :: Regex -> String -> Boolean
 export matchesSuffix = (rg, x) => pipe(
   search(rg),
+  IO.trace("suffix"),
   where {
     #[Just(_), _] =>
       true
 
-    #[Nothing, Just(_)] =>
-      true
-
     #[Nothing, Nothing] =>
-      false
-
-    _ =>
       false
   },
 )(x)
 
-/*
-
 stepOneB :: String -> String
-stepOneB = (result) => ifElse(
+export stepOneB = (result) => Fn.ifElse(
   matchesSuffix(SUFFIX_EED),
   pipe(
-    String.charAt(1),
+    IO.trace("PRESEARCH"),
+    search(SUFFIX_EED),
+    IO.trace("SEARCH"),
     where {
-      Just(c1) =>
-        ifElse(check(LOGIC_GT0), K(String.slice(0, -1, result)), K(result))(String.singleton(c1))
+      #[Just(x), _] =>
+        pipe(
+          String.firstChar,
+          map(
+            pipe(
+              String.singleton,
+              Fn.ifElse(
+                check(LOGIC_GT0),
+                Fn.always(String.slice(0, -1, result)),
+                Fn.always(result),
+              ),
+            ),
+          ),
+          fromMaybe(result),
+        )(x)
 
-      Nothing =>
+      #[Nothing, _] =>
         result
     },
   ),
-  when(
+  Fn.when(
     matchesSuffix(SUFFIX_ED_ING),
     pipe(
-      String.charAt(1),
+      search(SUFFIX_ED_ING),
       where {
-        Just(char) =>
+        #[Just(x), _] =>
           pipe(
-            String.singleton,
-            ifElse(
-              either(check(SUFFIX_AT_BL_IZ), check(CONSONANT_LIKE)),
+            String.charAt(1),
+            map(String.singleton),
+            fromMaybe(result),
+            Fn.ifElse(
+              Fn.either(check(SUFFIX_AT_BL_IZ), check(CONSONANT_LIKE)),
               append("e"),
-              ifElse(check(SUFFIX_CONSONANT_LIKE), String.slice(0, -1), K(result)),
+              Fn.when(check(SUFFIX_CONSONANT_LIKE), String.slice(0, -1)),
             ),
-          )(char)
+          )(x)
 
-        Nothing =>
+        _ =>
           result
       },
     ),
   ),
 )(result)
 
+/*
 stepOneC :: String -> String
 stepOneC = when(
   (r) => pipe(

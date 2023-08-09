@@ -14,7 +14,6 @@ export UnflaggedRegex = (x) => Regex(x, "")
 
 __rg :: String -> String -> Regex
 __rg = (pattern, flags) => #- {
-  console.log({pattern,flags}, typeof pattern)
   return new RegExp(pattern, flags)
 } -#
 
@@ -37,7 +36,6 @@ export match = (rg, input) => where(rg) {
 __check :: String -> String -> String -> Boolean
 __check = (pattern, flags, input) => pipe(
   __rg(pattern),
-  IO.trace("RAGE X"),
   (r) => #- {
     return r && !!r.test(input)
   } -#,
@@ -73,15 +71,13 @@ alias SearchMatch = #[Maybe String, Maybe String]
 
 __search :: String -> String -> String -> SearchMatch
 __search = (pattern, flags, input) => pipe(
-  IO.trace("__SEARCHIES"),
   __rg($, flags),
   (r) => #- {
-    const searched = r.exec(input)
-    const [_i, a, b] = searched
-    return { a: !!a ? a : "", b: !!b ? b : "" }
+    const searched = r.exec(input) || []
+    const [_i, a = "", b = ""] = searched
+    return { a, b }
   } -#,
   (x) => #[x.a == "" ? Nothing : Just(x.a), x.b == "" ? Nothing : Just(x.b)],
-  IO.trace("OUTOUTOUT"),
 )(pattern)
 
 search :: Regex -> String -> SearchMatch
