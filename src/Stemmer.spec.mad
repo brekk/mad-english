@@ -1,0 +1,25 @@
+import { assertEquals, test } from "Test"
+
+import {
+  SUFFIX_EED,
+  append,
+  dealWithLeadingY,
+  matchesSuffix,
+  prepend,
+  sliceToEnd,
+  stepOneA,
+} from "./Stemmer"
+
+
+
+test("prepend", () => assertEquals("squibblebib", prepend("squibble", "bib")))
+test("append", () => assertEquals("bibsquibble", append("squibble", "bib")))
+test("sliceToEnd", () => assertEquals("squibble", sliceToEnd(3, "bibsquibble")))
+
+test("dealWithLeadingY - match", () => assertEquals("Y???", dealWithLeadingY("y???")))
+test("dealWithLeadingY - no match", () => assertEquals("?", dealWithLeadingY("?")))
+test("dealWithLeadingY - nothing match", () => assertEquals("", dealWithLeadingY("")))
+
+test("stepOneA", () => assertEquals("issue", stepOneA("issues")))
+
+test("matchesSuffix", () => assertEquals(true, matchesSuffix(SUFFIX_EED, "indeed")))

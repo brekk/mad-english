@@ -3,6 +3,7 @@ import type { Regex } from "./Regex"
 import { gt } from "Compare"
 import Dict from "Dictionary"
 import Fn from "Function"
+import IO from "IO"
 import List from "List"
 import { Just, Nothing } from "Maybe"
 import {} from "Number"
@@ -12,16 +13,13 @@ import { Regex, UnflaggedRegex, check, match, replace, search } from "./Regex"
 
 
 
-I = Fn.identity
-K = Fn.always
-ifElse = Fn.ifElse
-unless = Fn.ifElse($, I)
-when = Fn.when
-either = Fn.either
+unless = Fn.ifElse($, Fn.identity)
 
 prepend :: String -> String -> String
-prepend = (before, x) => before ++ x
-append = (after, x) => prepend(x, after)
+export prepend = (before, x) => before ++ x
+
+append :: String -> String -> String
+export append = (after, x) => prepend(x, after)
 
 sliceToEnd :: Integer -> String -> String
 export sliceToEnd = (x, str) => pipe(
@@ -29,7 +27,7 @@ export sliceToEnd = (x, str) => pipe(
 )(str)
 
 
-PASS_2_MAP = Dict.fromList([
+export PASS_2_MAP = Dict.fromList([
   #["ational", "ate"],
   #["tional", "tion"],
   #["enci", "ence"],
@@ -53,7 +51,7 @@ PASS_2_MAP = Dict.fromList([
   #["logi", "log"],
 ])
 
-PASS_3_MAP = Dict.fromList([
+export PASS_3_MAP = Dict.fromList([
   #["icate", "ic"],
   #["ative", ""],
   #["alize", "al"],
@@ -63,37 +61,39 @@ PASS_3_MAP = Dict.fromList([
   #["ness", ""],
 ])
 
-CONSONANT = "[^aeiou]"
-VOWEL = "[aeiouy]"
-CONSONANTS = "(" ++ CONSONANT ++ "[^aeiouy]*)"
-VOWELS = "(" ++ VOWEL ++ "[aeiou]*)"
+export CONSONANT = "[^aeiou]"
+export VOWEL = "[aeiouy]"
+export CONSONANTS = "(" ++ CONSONANT ++ "[^aeiouy]*)"
+export VOWELS = "(" ++ VOWEL ++ "[aeiou]*)"
 
-LOGIC_GT0 = UnflaggedRegex("^" ++ CONSONANTS ++ "?" ++ VOWELS ++ CONSONANTS)
-LOGIC_EQ1 = UnflaggedRegex("^" ++ CONSONANTS ++ "?" ++ VOWELS ++ CONSONANTS ++ VOWELS ++ "?$")
-LOGIC_GT1 = UnflaggedRegex("^" ++ CONSONANTS ++ "?(" ++ VOWELS ++ CONSONANTS ++ "){2,}")
-VOWEL_IN_STEM = UnflaggedRegex("^" ++ CONSONANTS ++ "?" ++ VOWEL)
-CONSONANT_LIKE = UnflaggedRegex("^" ++ CONSONANTS ++ VOWEL ++ "[^aeiouwxy]$")
+export LOGIC_GT0 = UnflaggedRegex("^" ++ CONSONANTS ++ "?" ++ VOWELS ++ CONSONANTS)
+export LOGIC_EQ1 = UnflaggedRegex(
+  "^" ++ CONSONANTS ++ "?" ++ VOWELS ++ CONSONANTS ++ VOWELS ++ "?$",
+)
+export LOGIC_GT1 = UnflaggedRegex("^" ++ CONSONANTS ++ "?(" ++ VOWELS ++ CONSONANTS ++ "){2,}")
+export VOWEL_IN_STEM = UnflaggedRegex("^" ++ CONSONANTS ++ "?" ++ VOWEL)
+export CONSONANT_LIKE = UnflaggedRegex("^" ++ CONSONANTS ++ VOWEL ++ "[^aeiouwxy]$")
 
-SUFFIX_LL = UnflaggedRegex("ll$")
-SUFFIX_E = UnflaggedRegex("^(.+?)e$")
-SUFFIX_Y = UnflaggedRegex("^(.+?)y$")
-SUFFIX_ION = UnflaggedRegex("^(.+?(s|t))(ion)$")
-SUFFIX_ED_ING = UnflaggedRegex("^(.+?)(ed|ing)$")
-SUFFIX_AT_BL_IZ = UnflaggedRegex("(at|bl|iz)$")
-SUFFIX_EED = UnflaggedRegex("^(.+?)eed$")
-SUFFIX_S = UnflaggedRegex("^.+?[^s]s$")
-SUFFIX_SSES_IES = UnflaggedRegex("^.+?(ss|i)es$")
-SUFFIX_CONSONANT_LIKE = UnflaggedRegex("([^aeiouylsz])\1$")
-PASS_2 = UnflaggedRegex(
+export SUFFIX_LL = UnflaggedRegex("ll$")
+export SUFFIX_E = UnflaggedRegex("^(.+?)e$")
+export SUFFIX_Y = UnflaggedRegex("^(.+?)y$")
+export SUFFIX_ION = UnflaggedRegex("^(.+?(s|t))(ion)$")
+export SUFFIX_ED_ING = UnflaggedRegex("^(.+?)(ed|ing)$")
+export SUFFIX_AT_BL_IZ = UnflaggedRegex("(at|bl|iz)$")
+export SUFFIX_EED = UnflaggedRegex("^(.+?)eed$")
+export SUFFIX_S = UnflaggedRegex("^.+?[^s]s$")
+export SUFFIX_SSES_IES = UnflaggedRegex("^.+?(ss|i)es$")
+export SUFFIX_CONSONANT_LIKE = UnflaggedRegex("([^aeiouylsz])\\1$")
+export PASS_2 = UnflaggedRegex(
   "^(.+?)(ational|tional|enci|anci|izer|bli|alli|entli|eli|ousli|ization|ation|ator|alism|iveness|fulness|ousness|aliti|iviti|biliti|logi)$",
 )
-PASS_3 = UnflaggedRegex("^(.+?)(icate|ative|alize|iciti|ical|ful|ness)$")
-PASS_4 = UnflaggedRegex(
+export PASS_3 = UnflaggedRegex("^(.+?)(icate|ative|alize|iciti|ical|ful|ness)$")
+export PASS_4 = UnflaggedRegex(
   "^(.+?)(al|ance|ence|er|ic|able|ible|ant|ement|ment|ent|ou|ism|ate|iti|ous|ive|ize)$",
 )
 
 dealWithLeadingY :: String -> String
-dealWithLeadingY = when(
+export dealWithLeadingY = Fn.when(
   pipe(
     String.firstChar,
     where {
@@ -111,14 +111,27 @@ dealWithLeadingY = when(
 )
 
 stepOneA :: String -> String
-stepOneA = ifElse(check(SUFFIX_SSES_IES), String.slice(0, -2), String.slice(0, -1))
+export stepOneA = Fn.ifElse(check(SUFFIX_SSES_IES), String.slice(0, -2), String.slice(0, -1))
 
 matchesSuffix :: Regex -> String -> Boolean
-matchesSuffix = (rg, x) => pipe(
+export matchesSuffix = (rg, x) => pipe(
   search(rg),
-  List.length,
-  gt(0),
+  where {
+    #[Just(_), _] =>
+      true
+
+    #[Nothing, Just(_)] =>
+      true
+
+    #[Nothing, Nothing] =>
+      false
+
+    _ =>
+      false
+  },
 )(x)
+
+/*
 
 stepOneB :: String -> String
 stepOneB = (result) => ifElse(
@@ -181,15 +194,19 @@ export stemmer = pipe(
     (x) => String.length(x) < 3,
     (raw) => pipe(
       dealWithLeadingY,
-      // step 1a
+      IO.trace("leading y"),
       stepOneA,
-      // step 1b
+      IO.trace("one a"),
       stepOneB,
-      // step 1c
+      IO.trace("one b"),
       stepOneC,
-      // step 2
       // stepTwo,
+
+
+
+
 
     )(raw),
   ),
 )
+*/

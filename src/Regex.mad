@@ -1,13 +1,27 @@
+import type { Maybe } from "Maybe"
+
+import IO from "IO"
+import { Just, Nothing } from "Maybe"
+
+
+
 export type Regex = Regex(String, String) | InvalidRegex
+
+
 
 UnflaggedRegex :: String -> Regex
 export UnflaggedRegex = (x) => Regex(x, "")
 
-__rg = (pattern, flags) => #- new RegExp(pattern, flags) -#
+__rg :: String -> String -> Regex
+__rg = (pattern, flags) => #- {
+  console.log({pattern,flags}, typeof pattern)
+  return new RegExp(pattern, flags)
+} -#
 
 __match :: String -> String -> Boolean
 __match = (pattern, flags) => pipe(
   __rg(pattern),
+  IO.trace("PATTERNITY"),
   (r) => #- input.match(r) !== null -#,
 )(flags)
 
@@ -20,16 +34,19 @@ export match = (rg, input) => where(rg) {
     false
 }
 
-__check :: String -> String -> Boolean
-__check = (pattern, flags) => pipe(
+__check :: String -> String -> String -> Boolean
+__check = (pattern, flags, input) => pipe(
   __rg(pattern),
-  (r) => #- input.test(r) !== null -#,
+  IO.trace("RAGE X"),
+  (r) => #- {
+    return r && !!r.test(input)
+  } -#,
 )(flags)
 
 check :: Regex -> String -> Boolean
 export check = (rg, input) => where(rg) {
   Regex(pattern, flags) =>
-    __check(pattern, flags)
+    __check(pattern, flags, input)
 
   InvalidRegex =>
     false
@@ -38,7 +55,9 @@ export check = (rg, input) => where(rg) {
 __replace :: String -> String -> String -> String
 __replace = (pattern, flags, replacement) => pipe(
   __rg(pattern),
-  (r) => #- input.replace(r, replacement) -#,
+  (r) => #- {
+    return input.replace(r, replacement)
+  } -#,
 )(flags)
 
 replace :: Regex -> String -> String -> String
@@ -50,17 +69,26 @@ export replace = (rg, replacement, input) => where(rg) {
     input
 }
 
-__search :: String -> String -> String -> List String
-__search = (pattern, flags, input) => pipe(
-  __rg(pattern),
-  (r) => #- r.exec(input) -#,
-)(input)
+alias SearchMatch = #[Maybe String, Maybe String]
 
-search :: Regex -> String -> List String
+__search :: String -> String -> String -> SearchMatch
+__search = (pattern, flags, input) => pipe(
+  IO.trace("__SEARCHIES"),
+  __rg($, flags),
+  (r) => #- {
+    const searched = r.exec(input)
+    const [_i, a, b] = searched
+    return { a: !!a ? a : "", b: !!b ? b : "" }
+  } -#,
+  (x) => #[x.a == "" ? Nothing : Just(x.a), x.b == "" ? Nothing : Just(x.b)],
+  IO.trace("OUTOUTOUT"),
+)(pattern)
+
+search :: Regex -> String -> SearchMatch
 export search = (rg, input) => where(rg) {
   Regex(pattern, flags) =>
     __search(pattern, flags, input)
 
   InvalidRegex =>
-    []
+    #[Nothing, Nothing]
 }

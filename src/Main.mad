@@ -1,7 +1,7 @@
 import IO from "IO"
 
 import { Regex, UnflaggedRegex } from "./Regex"
-import { stemmer } from "./Stemmer"
+import Sx from "./Stemmer"
 
 
 
@@ -10,9 +10,9 @@ main = () => {
   pipe(
     UnflaggedRegex,
     IO.trace("reggie watts"),
-  )("[^aeiou]")
+  )(`[^aeiou]`)
   pipe(
-    stemmer,
-    IO.trace("stemstimstomstam"),
-  )("issues")
+    Sx.dealWithLeadingY,
+    IO.trace("ahoy!"),
+  )(Sx.dealWithLeadingY("Yvette"))
 }
