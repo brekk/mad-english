@@ -9,8 +9,14 @@ import {
   matchesSuffix,
   prepend,
   sliceToEnd,
+  stepFive,
+  stepFour,
   stepOneA,
   stepOneB,
+  stepOneC,
+  stepSix,
+  stepThree,
+  stepTwo,
 } from "./Stemmer"
 
 
@@ -56,5 +62,62 @@ test(
       "concede",
       "intercede",
     ]),
+  ),
+)
+
+test(
+  "stepOneC",
+  () => assertEquals(["ei", "ai", "ri", "hi"], map(stepOneC)(["needy", "lazy", "crazy", "ahoy"])),
+)
+
+test(
+  "stepTwo",
+  () => assertEquals(
+    ["rate", "rotate", "silences", "energize", "organize"],
+    map(stepTwo)(["rational", "rotational", "silences", "energizer", "organization"]),
+  ),
+)
+
+test(
+  "stepThree",
+  () => assertEquals(
+    ["predic", "gener", "radical", "duplic", "fantastic"],
+    map(stepThree)(["predicate", "generative", "radicalize", "dupliciti", "fantastical"]),
+  ),
+)
+
+test(
+  "stepFour",
+  () => assertEquals(
+    ["bal", "val", "sci", "new", "gener", "st", "quibble", "cruc", "c", "c", "mo"],
+    map(stepFour)([
+      "balance",
+      "valence",
+      "science",
+      "newer",
+      "generic",
+      "stable",
+      "quibble",
+      "crucible",
+      "cant",
+      "cement",
+      "moment",
+    ]),
+  ),
+)
+
+test(
+  "stepFive",
+  () => assertEquals(
+    ["ced", "led", "please", "ease", "aisle"],
+    map(stepFive)(["cede", "lede", "please", "ease", "aisle"]),
+  ),
+)
+
+test(
+  "stepSix",
+  () => assertEquals(
+    ["will", "wills", "ill", "ills", "ails", "bells"],
+    map(stepSix)(["will", "wills", "ill", "ills", "ails", "bells"]),
   ),
 )

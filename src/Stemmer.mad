@@ -9,7 +9,7 @@ import { Just, Nothing, fromMaybe } from "Maybe"
 import {} from "Number"
 import String from "String"
 
-import { Regex, UnflaggedRegex, check, match, replace, search } from "./Regex"
+import { Regex, UnflaggedRegex, check, match, query, replace, search } from "./Regex"
 
 
 
@@ -91,73 +91,78 @@ export PASS_3 = UnflaggedRegex("^(.+?)(icate|ative|alize|iciti|ical|ful|ness)$")
 export PASS_4 = UnflaggedRegex(
   "^(.+?)(al|ance|ence|er|ic|able|ible|ant|ement|ment|ent|ou|ism|ate|iti|ous|ive|ize)$",
 )
+hasLeadingY :: String -> Boolean
+export hasLeadingY = pipe(
+  String.firstChar,
+  where {
+    Just(c0) =>
+      Fn.equals('y', c0)
+
+    Nothing =>
+      false
+  },
+)
 
 dealWithLeadingY :: String -> String
 export dealWithLeadingY = Fn.when(
-  pipe(
-    String.firstChar,
-    where {
-      Just(c0) =>
-        Fn.equals('y', c0)
-
-      Nothing =>
-        false
-    },
-  ),
+  hasLeadingY,
   pipe(
     sliceToEnd(1),
     prepend("Y"),
   ),
 )
 
+undealWithLeadingY :: String -> String
+export undealWithLeadingY = (raw) => "y" ++ sliceToEnd(1, raw)
+
 stepOneA :: String -> String
 export stepOneA = Fn.ifElse(check(SUFFIX_SSES_IES), String.slice(0, -2), String.slice(0, -1))
 
 matchesSuffix :: Regex -> String -> Boolean
-export matchesSuffix = (rg, x) => pipe(
-  search(rg),
-  IO.trace("suffix"),
+export matchesSuffix = (rg, x) => query(
+  rg,
   where {
     #[Just(_), _] =>
       true
 
-    #[Nothing, Nothing] =>
+    #[Nothing, _] =>
       false
   },
-)(x)
+  x,
+)
 
 stepOneB :: String -> String
 export stepOneB = (result) => Fn.ifElse(
   matchesSuffix(SUFFIX_EED),
   pipe(
-    IO.trace("PRESEARCH"),
-    search(SUFFIX_EED),
-    IO.trace("SEARCH"),
-    where {
-      #[Just(x), _] =>
-        pipe(
-          String.firstChar,
-          map(
-            pipe(
-              String.singleton,
-              Fn.ifElse(
-                check(LOGIC_GT0),
-                Fn.always(String.slice(0, -1, result)),
-                Fn.always(result),
+    query(
+      SUFFIX_EED,
+      where {
+        #[Just(x), _] =>
+          pipe(
+            String.firstChar,
+            map(
+              pipe(
+                String.singleton,
+                Fn.ifElse(
+                  check(LOGIC_GT0),
+                  Fn.always(String.slice(0, -1, result)),
+                  Fn.always(result),
+                ),
               ),
             ),
-          ),
-          fromMaybe(result),
-        )(x)
+            fromMaybe(result),
+          )(x)
 
-      #[Nothing, _] =>
-        result
-    },
+        #[Nothing, _] =>
+          result
+      },
+    ),
   ),
   Fn.when(
     matchesSuffix(SUFFIX_ED_ING),
-    pipe(
-      search(SUFFIX_ED_ING),
+    query(
+      SUFFIX_ED_ING,
       where {
         #[Just(x), _] =>
           pipe(
@@ -178,25 +183,125 @@ export stepOneB = (result) => Fn.ifElse(
   ),
 )(result)
 
-/*
 stepOneC :: String -> String
-stepOneC = when(
-  (r) => pipe(
-    matchesSuffix(SUFFIX_Y),
-    (c) => c && check(VOWEL_IN_STEM, r),
-  )(r),
+export stepOneC = Fn.when(
+  Fn.both(matchesSuffix(SUFFIX_Y), check(VOWEL_IN_STEM)),
   (raw) => pipe(
     String.charAt(1),
-    where {
-      Just(c) =>
-        String.singleton(c) ++ "i"
+    map((c) => String.singleton(c) ++ "i"),
+    fromMaybe(raw),
+  )(raw),
+)
 
-      Nothing =>
+stepTwo :: String -> String
+export stepTwo = Fn.when(
+  Fn.both(matchesSuffix(PASS_2), check(LOGIC_GT0)),
+  (raw) => query(
+    PASS_2,
+    where {
+      #[Just(a), Just(y)] =>
+        pipe(
+          Dict.get(y),
+          where {
+            Just(z) =>
+              a ++ z
+
+            Nothing =>
+              raw
+          },
+        )(PASS_2_MAP)
+
+      #[Just(a), Nothing] =>
+        raw
+
+      #[Nothing, _] =>
         raw
     },
   )(raw),
 )
 
+stepThree :: String -> String
+export stepThree = Fn.when(
+  Fn.both(matchesSuffix(PASS_3), check(LOGIC_GT0)),
+  (raw) => query(
+    PASS_3,
+    where {
+      #[Just(a), Just(y)] =>
+        pipe(
+          Dict.get(y),
+          where {
+            Just(z) =>
+              a ++ z
+
+            Nothing =>
+              raw
+          },
+        )(PASS_3_MAP)
+
+      #[Just(a), Nothing] =>
+        raw
+
+      #[Nothing, _] =>
+        raw
+    },
+  )(raw),
+)
+
+stepFour :: String -> String
+export stepFour = Fn.ifElse(
+  matchesSuffix(PASS_4),
+  (raw) => query(
+    PASS_4,
+    where {
+      #[Just(y), _] =>
+        y
+
+      #[Nothing, _] =>
+        raw
+    },
+  )(raw),
+  (raw) => Fn.when(
+    Fn.both(matchesSuffix(SUFFIX_ION), check(LOGIC_GT1)),
+    query(
+      SUFFIX_ION,
+      where {
+        #[Just(a), _] =>
+          a
+
+        #[Nothing, _] =>
+          raw
+      },
+    ),
+  )(raw),
+)
+
+stepFive :: String -> String
+export stepFive = Fn.when(
+  pipe(
+    search(SUFFIX_E),
+    where {
+      #[Just(x), _] =>
+        (check(LOGIC_GT1, x) || check(LOGIC_EQ1, x)) && check(CONSONANT_LIKE, x)
+
+      _ =>
+        false
+    },
+  ),
+  (raw) => query(
+    SUFFIX_E,
+    where {
+      #[Just(x), _] =>
+        x
+
+      _ =>
+        raw
+    },
+    raw,
+  ),
+)
+
+stepSix :: String -> String
+export stepSix = Fn.when(Fn.both(check(SUFFIX_LL), check(LOGIC_GT1)), String.slice(0, -1))
 
 stemmer :: String -> String
 export stemmer = pipe(
@@ -204,20 +309,19 @@ export stemmer = pipe(
   unless(
     (x) => String.length(x) < 3,
     (raw) => pipe(
-      dealWithLeadingY,
-      IO.trace("leading y"),
-      stepOneA,
-      IO.trace("one a"),
-      stepOneB,
-      IO.trace("one b"),
-      stepOneC,
-      // stepTwo,
-
-
-
-
-
+      hasLeadingY,
+      (leadingY) => pipe(
+        dealWithLeadingY,
+        stepOneA,
+        stepOneB,
+        stepOneC,
+        stepTwo,
+        stepThree,
+        stepFour,
+        stepFive,
+        stepSix,
+        leadingY ? undealWithLeadingY : Fn.identity,
+      )(raw),
     )(raw),
   ),
 )
-*/

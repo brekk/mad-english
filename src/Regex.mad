@@ -88,3 +88,9 @@ export search = (rg, input) => where(rg) {
   InvalidRegex =>
     #[Nothing, Nothing]
 }
+
+query :: Regex -> (SearchMatch -> a) -> String -> a
+export query = (rg, fn, input) => pipe(
+  search(rg),
+  fn,
+)(input)
