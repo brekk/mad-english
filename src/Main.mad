@@ -1,4 +1,7 @@
+import File from "File"
+import Fn from "Function"
 import IO from "IO"
+import Wish from "Wish"
 
 import { Regex, UnflaggedRegex } from "./Regex"
 import Sx from "./Stemmer"
@@ -6,13 +9,20 @@ import Sx from "./Stemmer"
 
 
 main = () => {
-  IO.putLine("Hello World!")
+  /*
+              IO.putLine("Hello World!")
+              pipe(
+                UnflaggedRegex,
+                IO.trace("reggie watts"),
+              )(`[^aeiou]`)
+              pipe(
+                Sx.dealWithLeadingY,
+                IO.trace("ahoy!"),
+              )(Sx.dealWithLeadingY("Yvette"))
+            */
+  raw = File.read("./corpus.txt")
   pipe(
-    UnflaggedRegex,
-    IO.trace("reggie watts"),
-  )(`[^aeiou]`)
-  pipe(
-    Sx.dealWithLeadingY,
-    IO.trace("ahoy!"),
-  )(Sx.dealWithLeadingY("Yvette"))
+    map(File.readBytes),
+    Wish.fulfill(IO.trace("bad"), IO.trace("good")),
+  )(raw)
 }
