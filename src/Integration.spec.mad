@@ -4,6 +4,7 @@ import IO from "IO"
 import List from "List"
 import { Just, Nothing } from "Maybe"
 import String from "String"
+import { assertEquals, test } from "Test"
 import Wish from "Wish"
 
 
@@ -22,12 +23,13 @@ cleanLines = pipe(
   List.filter(isntEmpty),
 )
 
-main = () => {
-  pipe(
-    Ap.liftA2(
-      (input, output) => List.zip(cleanLines(input), cleanLines(output)),
-      File.read("./src/corpus-output.txt"),
-    ),
-    Wish.fulfill(traceDrop("bad"), traceDrop("good")),
-  )(File.read("./src/corpus-input.txt"))
-}
+pipe(
+  Ap.liftA2(
+    (input, output) => List.zip(cleanLines(input), cleanLines(output)),
+    File.read("./corpus-output.txt"),
+  ),
+  map(
+    map(where { #[input, output] => test(`stemmer: ${input}`, () => assertEquals(output, input)) }),
+  ),
+  Wish.fulfill(traceDrop("Something broke"), traceDrop("tests generated!")),
+)(File.read("./corpus-input.txt"))
