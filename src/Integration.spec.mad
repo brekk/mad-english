@@ -1,5 +1,5 @@
 import Ap from "Applicative"
-import File from "File"
+import { read } from "File"
 import IO from "IO"
 import List from "List"
 import { Just, Nothing } from "Maybe"
@@ -26,10 +26,10 @@ cleanLines = pipe(
 pipe(
   Ap.liftA2(
     (input, output) => List.zip(cleanLines(input), cleanLines(output)),
-    File.read("./corpus-output.txt"),
+    read("./corpus-output.txt"),
   ),
   map(
     map(where { #[input, output] => test(`stemmer: ${input}`, () => assertEquals(output, input)) }),
   ),
   Wish.fulfill(traceDrop("Something broke"), traceDrop("tests generated!")),
-)(File.read("./corpus-input.txt"))
+)(read("./corpus-input.txt"))
